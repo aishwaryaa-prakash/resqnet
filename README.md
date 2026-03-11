@@ -111,3 +111,28 @@ socket.io
    Send a message.
    If messages appear in both windows, the system is working.
    Devices connected to the same Wi-Fi network can communicate without internet.
+
+
+## Demo / Prototype
+Current Prototype Capabilities
+The current prototype demonstrates:
+Local server hosting
+Real-time messaging
+Communication without internet
+Multi-device local communication
+Basic emergency communication framework
+
+## Planned Features
+The following features will be added during development:
+1. Emergency broadcast alert button
+2. Safety status indicators (Safe / Need Help)
+3. Local message storage
+4. Relay node logic for mesh-inspired communication
+5. Improved user interface
+
+## Future Scope
+Future improvements may include:
+True mesh networking support
+Cluster-to-cluster communication
+Offline-first mobile application
+Enhanced disaster coordination features
