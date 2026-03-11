@@ -79,28 +79,28 @@ npm (comes with Node.js)
 Git
 A modern web browser (Chrome, Edge, Firefox)
 
-1. clone the repository
+1. Clone the repository
    git clone https://github.com/aishwaryaa-prakash/resqnet.git
    cd resqnet
 
-2.Install Backend Dependencies
-  Navigate to the backend folder:
+2. Install Backend Dependencies
+   Navigate to the backend folder:
    cd backend
    npm install
-This installs the required packages:
-express
-socket.io
+   This installs the required packages:
+   express
+   socket.io
 
-3.Start the Server
-  Run the server:
+3. Start the Server
+   Run the server:
        node server.js
-  You should see:
+   You should see:
        Server running on port 3000
 
-4.Open the Frontend
+4. Open the Frontend
    Navigate to the frontend folder and open the file:
      frontend/index.html
-  You can open it by:
+   You can open it by:
      double-clicking the file
      or
      dragging it into a browser
