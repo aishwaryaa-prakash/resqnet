@@ -80,7 +80,7 @@ Git
 A modern web browser (Chrome, Edge, Firefox)
 
 1. clone the repository
-   git clone https://github.com/YOUR-USERNAME/resqnet.git
+   git clone https://github.com/aishwaryaa-prakash/resqnet.git
    cd resqnet
 
 2.Install Backend Dependencies
