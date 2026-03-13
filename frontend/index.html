@@ -18,14 +18,19 @@
 const socket = io("http://localhost:3000");
 
 function sendMessage(){
-  const input = document.getElementById("messageInput");
-  socket.emit("chat message", input.value);
-  input.value="";
+  const name=document.getElementById("username").value;
+  const message=document.getElementById("messageInput").value;
+  const input = document.getElementById("messageInput").value;
+  socket.emit("chat message", {
+    name: name,
+    message: message
+  });
+  document.getElementById("messageInput").value = "";
 }
 
-socket.on("chat message", function(msg){
+socket.on("chat message", function(data){
   const li=document.createElement("li");
-  li.textContent=msg;
+  li.textContent=data.name + ": " + data.message;
   document.getElementById("messages").appendChild(li);
 });
 </script>
