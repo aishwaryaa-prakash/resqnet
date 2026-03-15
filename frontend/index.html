@@ -3,36 +3,72 @@
 <head>
 <title>ResQNet</title>
 </head>
+
 <body>
 
 <h2>ResQNet Chat</h2>
 
+<input id="username" placeholder="Enter your name">
+<br><br>
+
 <input id="messageInput" placeholder="Type message">
 <button onclick="sendMessage()">Send</button>
+
+<button onclick="sendEmergency()">🚨 Emergency Alert</button>
 
 <ul id="messages"></ul>
 
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 
 <script>
-const socket = io("http://localhost:3000");
+
+const socket = io();
 
 function sendMessage(){
-  const name=document.getElementById("username").value;
-  const message=document.getElementById("messageInput").value;
-  const input = document.getElementById("messageInput").value;
+  const name = document.getElementById("username").value;
+  const message = document.getElementById("messageInput").value;
+
+  if(name === "" || message === ""){
+    return;
+  }
+
   socket.emit("chat message", {
     name: name,
     message: message
   });
-  document.getElementById("messageInput").value = "";
+
+  document.getElementById("messageInput").value="";
+}
+
+function sendEmergency(){
+  const name = document.getElementById("username").value;
+
+  if(name === ""){
+    return;
+  }
+
+  socket.emit("emergency alert", {
+    name: name
+  });
 }
 
 socket.on("chat message", function(data){
-  const li=document.createElement("li");
-  li.textContent=data.name + ": " + data.message;
+  const li = document.createElement("li");
+  li.textContent = data.name + ": " + data.message;
+
   document.getElementById("messages").appendChild(li);
 });
+
+socket.on("emergency alert", function(data){
+  const li = document.createElement("li");
+
+  li.textContent = "🚨 EMERGENCY ALERT FROM " + data.name.toUpperCase();
+  li.style.color = "red";
+  li.style.fontWeight = "bold";
+
+  document.getElementById("messages").appendChild(li);
+});
+
 </script>
 
 </body>
