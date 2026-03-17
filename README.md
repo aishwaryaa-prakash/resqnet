@@ -17,17 +17,28 @@ ResQNet improves community-level coordination during emergencies by enabling rea
 As an open-source system, the platform can be extended and adapted by developers and communities to support disaster preparedness, relief shelters, and emergency response environments. The project demonstrates how decentralized communication tools can strengthen resilience in situations where traditional infrastructure becomes unreliable.
 
 ## Features
-The initial prototype focuses on essential functionality that demonstrates the concept of resilient local communication:
-Local Network Communication
-Devices connected to the same Wi-Fi or hotspot network can communicate without requiring internet access.
 Real-Time Messaging
-Users can send and receive messages instantly within the connected network.
-Emergency Broadcast Alerts
-A dedicated alert feature allows users to send urgent notifications to all connected devices simultaneously.
-Safety Status Updates
-Users can mark their status as “Safe” or “Need Help”, allowing others in the network to quickly assess community well-being.
-Local Message Logging
-Messages are stored locally to maintain communication records during the session.
+- Instant communication between connected users
+- No internet required
+
+### Emergency Broadcast
+- One-click alert system
+- Sends urgent notifications to all users
+
+### Safety Status System
+- Users can mark:
+  - SAFE
+  - NEED HELP
+- Visible to all connected users
+
+### Location Sharing
+- Users can share their GPS location (with permission)
+- Helps responders locate users quickly
+
+### Relay Mode (Mesh-Inspired)
+- Devices can act as relay nodes
+- Messages are forwarded to extend communication range
+- Enables communication beyond direct connections
 
 ## Conceptual Mesh Extension
 While the initial implementation focuses on communication within a single local cluster, the architecture is designed with the possibility of future mesh-inspired extensions. In such systems, intermediary nodes can relay messages between clusters, enabling broader communication networks even when centralized infrastructure is unavailable.
@@ -39,7 +50,7 @@ Node.js
 Express.js
 Socket.io (for real-time communication)
 Frontend
-HTML/CSS or React for user interface
+HTML/CSS,Javascript
 Data Storage
 Lightweight local storage using JSON or SQLite
 Development Tools
@@ -50,7 +61,7 @@ VS Code for development
 ResQNet follows a local server-client architecture:
 One device hosts the communication server.
 Nearby devices connect through the same local network.
-Messages are transmitted via WebSockets.
+Messages are transmitted via WebSockets. Supports relay-based message forwarding
 The server broadcasts messages and alerts to all connected clients.
 This allows the system to operate without cloud services or internet connectivity.
 
@@ -97,20 +108,21 @@ A modern web browser (Chrome, Edge, Firefox)
    You should see:
        Server running on port 3000
 
-4. Open the Frontend
-   Navigate to the frontend folder and open the file:
-     frontend/index.html
-   You can open it by:
-     double-clicking the file
-     or
-     dragging it into a browser
+4.  Open Application
+    Open browser:
+    http://localhost:3000
 
-5. Test the Application
-   Run the server.
-   Open index.html in two different browser tabs or devices.
-   Send a message.
-   If messages appear in both windows, the system is working.
-   Devices connected to the same Wi-Fi network can communicate without internet.
+5. Connect Devices
+- Connect multiple devices to same Wi-Fi / hotspot
+- Open the app on each device
+
+Does it require Internet?
+No Internet Required  
+No Mobile Data Required  
+
+Works using:
+- Wi-Fi hotspot
+- Local network (LAN)
 
 
 ## Demo / Prototype
@@ -131,8 +143,8 @@ The following features will be added during development:
 5. Improved user interface
 
 ## Future Scope
-Future improvements may include:
-True mesh networking support
-Cluster-to-cluster communication
-Offline-first mobile application
-Enhanced disaster coordination features
+- Full mesh networking (multi-hop communication)
+- Bluetooth-based communication
+- Mobile app (Android/iOS)
+- Map integration for live tracking
+- Offline-first progressive web app (PWA)
