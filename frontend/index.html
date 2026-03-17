@@ -1,75 +1,73 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>ResQNet</title>
+  <title>ResQNet</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<h2>ResQNet Chat</h2>
+<div class="app-container">
 
-<input id="username" placeholder="Enter your name">
-<br><br>
+  <!-- Header -->
+  <header>
+    <div class="logo-area">
+      <div class="logo-icon">R</div>
+      <h1>ResQNet</h1>
+    </div>
 
-<input id="messageInput" placeholder="Type message">
-<button onclick="sendMessage()">Send</button>
+    <div class="user-setup">
+      <input id="username" placeholder="Enter your name">
+    </div>
+  </header>
 
-<button onclick="sendEmergency()">🚨 Emergency Alert</button>
+  <!-- Chat -->
+  <div class="chat-container">
+    <ul id="messages"></ul>
 
-<ul id="messages"></ul>
+    <div class="empty-state" id="emptyState">
+      <div class="empty-state-icon">💬</div>
+      <p>No messages yet</p>
+    </div>
+  </div>
+
+  <!-- Input -->
+  <div class="input-area">
+
+    <div class="input-container">
+      <input id="messageInput" placeholder="Enter your name first..." disabled>
+    </div>
+
+    <button id="sendBtn" class="primary" onclick="sendMessage()" disabled>
+      Send
+    </button>
+
+    <button id="emergencyBtn" class="danger" onclick="sendEmergency()" disabled>
+      🚨 Emergency Alert
+    </button>
+
+    <button id="safeBtn" class="primary" onclick="setSafe()" disabled>
+      🟢 I'm Safe
+    </button>
+
+    <button id="helpBtn" class="danger" onclick="needHelp()" disabled>
+      🆘 Need Help
+    </button>
+
+    <button id="locationBtn" class="primary" onclick="shareLocation()" disabled>
+      📍 Share Location
+    </button>
+
+    <button id="relayBtn" onclick="toggleRelay()">
+      🔁 Relay Mode OFF
+    </button>
+
+  </div>
+
+</div>
 
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-
-<script>
-
-const socket = io();
-
-function sendMessage(){
-  const name = document.getElementById("username").value;
-  const message = document.getElementById("messageInput").value;
-
-  if(name === "" || message === ""){
-    return;
-  }
-
-  socket.emit("chat message", {
-    name: name,
-    message: message
-  });
-
-  document.getElementById("messageInput").value="";
-}
-
-function sendEmergency(){
-  const name = document.getElementById("username").value;
-
-  if(name === ""){
-    return;
-  }
-
-  socket.emit("emergency alert", {
-    name: name
-  });
-}
-
-socket.on("chat message", function(data){
-  const li = document.createElement("li");
-  li.textContent = data.name + ": " + data.message;
-
-  document.getElementById("messages").appendChild(li);
-});
-
-socket.on("emergency alert", function(data){
-  const li = document.createElement("li");
-
-  li.textContent = "🚨 EMERGENCY ALERT FROM " + data.name.toUpperCase();
-  li.style.color = "red";
-  li.style.fontWeight = "bold";
-
-  document.getElementById("messages").appendChild(li);
-});
-
-</script>
+<script src="script.js"></script>
 
 </body>
 </html>

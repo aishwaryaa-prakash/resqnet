@@ -1,145 +1,216 @@
 const socket = io();
 
-// UI Elements
 const messagesList = document.getElementById("messages");
 const messageInput = document.getElementById("messageInput");
 const usernameInput = document.getElementById("username");
 const sendBtn = document.getElementById("sendBtn");
 const emergencyBtn = document.getElementById("emergencyBtn");
+const safeBtn = document.getElementById("safeBtn");
+const helpBtn = document.getElementById("helpBtn");
+const locationBtn = document.getElementById("locationBtn");
 const emptyState = document.getElementById("emptyState");
 
 let currentUser = "";
+let isRelay = false;
 
-// Helper to format time
+// 🔐 Deduplication store
+const processedMessages = new Set();
+
 function formatTime(date) {
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-// Initial state updates
+// Enable buttons
 usernameInput.addEventListener("input", (e) => {
   currentUser = e.target.value.trim();
   const isValid = currentUser.length > 0;
-  
+
   messageInput.disabled = !isValid;
   sendBtn.disabled = !isValid;
   emergencyBtn.disabled = !isValid;
-  
-  if (isValid) {
-    messageInput.placeholder = "Type a message...";
-  } else {
-    messageInput.placeholder = "Enter your name first...";
-  }
+  safeBtn.disabled = !isValid;
+  helpBtn.disabled = !isValid;
+  locationBtn.disabled = !isValid;
+
+  messageInput.placeholder = isValid ? "Type a message..." : "Enter your name first...";
 });
 
-messageInput.addEventListener("keypress", (e) => {
-  if (e.key === "Enter") {
-    sendMessage();
-  }
-});
-
-function scrollToBottom() {
-  messagesList.scrollTop = messagesList.scrollHeight;
-}
-
-function hideEmptyState() {
-  if (emptyState && emptyState.style.display !== "none") {
-    emptyState.style.display = "none";
+// 🔁 Relay function (SAFE)
+function relayForward(event, data) {
+  if (isRelay && !data.relayed) {
+    socket.emit(event, {
+      ...data,
+      relayed: true
+    });
   }
 }
 
-// Send Chat Message
+// 🧠 Universal receive handler (prevents duplicates)
+function handleIncoming(event, data, renderFn) {
+  if (processedMessages.has(data.id)) return;
+
+  processedMessages.add(data.id);
+
+  if (processedMessages.size > 2000) {
+    processedMessages.clear();
+  }
+
+  relayForward(event, data);
+
+  renderFn(data);
+}
+
+// ---------------- SEND ----------------
+
 function sendMessage() {
   const message = messageInput.value.trim();
-
-  if (currentUser === "" || message === "") {
-    return;
-  }
+  if (!currentUser || !message) return;
 
   socket.emit("chat message", {
+    id: crypto.randomUUID(),
     name: currentUser,
-    message: message,
+    message,
     timestamp: new Date().toISOString()
   });
 
   messageInput.value = "";
-  messageInput.focus();
 }
 
-// Send Emergency Alert
 function sendEmergency() {
-  if (currentUser === "") {
-    alert("Please enter your name first before sending an alert.");
+  if (!currentUser) return;
+
+  socket.emit("emergency alert", {
+    id: crypto.randomUUID(),
+    name: currentUser,
+    timestamp: new Date().toISOString()
+  });
+}
+
+function setSafe() {
+  socket.emit("status update", {
+    id: crypto.randomUUID(),
+    name: currentUser,
+    status: "SAFE",
+    timestamp: new Date().toISOString()
+  });
+}
+
+function needHelp() {
+  socket.emit("status update", {
+    id: crypto.randomUUID(),
+    name: currentUser,
+    status: "HELP",
+    timestamp: new Date().toISOString()
+  });
+}
+
+// 📍 LOCATION (fixed)
+function shareLocation() {
+  if (!navigator.geolocation) {
+    alert("Geolocation not supported");
     return;
   }
 
-  // Visual feedback on the button
-  emergencyBtn.innerHTML = "Sending...";
-  emergencyBtn.classList.add("sending");
-  
-  setTimeout(() => {
-    socket.emit("emergency alert", {
-      name: currentUser,
-      timestamp: new Date().toISOString()
-    });
-    emergencyBtn.innerHTML = "🚨 Emergency Alert";
-    emergencyBtn.classList.remove("sending");
-  }, 400); // slight delay for user feedback
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      socket.emit("location update", {
+        id: crypto.randomUUID(),
+        name: currentUser,
+        lat: pos.coords.latitude,
+        lon: pos.coords.longitude,
+        timestamp: new Date().toISOString()
+      });
+    },
+    (error) => {
+      alert("Location error: " + error.message);
+    }
+  );
 }
 
-// Receive Chat Message
-socket.on("chat message", function(data) {
-  hideEmptyState();
-  
-  const li = document.createElement("li");
-  li.className = "message";
-  
-  if (data.name === currentUser) {
-    li.classList.add("mine");
+// 🔁 Toggle relay
+function toggleRelay() {
+  isRelay = !isRelay;
+  const btn = document.getElementById("relayBtn");
+
+  if (isRelay) {
+    btn.textContent = "🔁 Relay Mode ON";
+    btn.style.background = "green";
+  } else {
+    btn.textContent = "🔁 Relay Mode OFF";
+    btn.style.background = "";
   }
+}
 
-  const timeStr = data.timestamp ? formatTime(new Date(data.timestamp)) : formatTime(new Date());
+// ---------------- RECEIVE ----------------
 
-  li.innerHTML = `
-    <div class="message-meta">
-      <span class="message-sender">${data.name}</span>
-      <span class="message-time">${timeStr}</span>
-    </div>
-    <div class="message-bubble">${data.message}</div>
-  `;
+// CHAT
+socket.on("chat message", (data) => {
+  handleIncoming("chat message", data, (data) => {
+    emptyState.style.display = "none";
 
-  messagesList.appendChild(li);
-  scrollToBottom();
-});
+    const li = document.createElement("li");
+    li.className = "message";
 
-// Receive Emergency Alert
-socket.on("emergency alert", function(data) {
-  hideEmptyState();
+    if (data.name === currentUser) li.classList.add("mine");
 
-  const li = document.createElement("li");
-  li.className = "message emergency";
-
-  const timeStr = data.timestamp ? formatTime(new Date(data.timestamp)) : formatTime(new Date());
-
-  li.innerHTML = `
-    <div class="message-bubble">
-      <div class="emergency-icon">🚨</div>
-      <div class="emergency-text">
-        <strong>EMERGENCY ALERT</strong>
-        <span>Triggered by ${data.name} at ${timeStr}</span>
+    li.innerHTML = `
+      <div class="message-meta">
+        <span>${data.name}</span>
+        <span>${formatTime(new Date(data.timestamp))}</span>
       </div>
-    </div>
-  `;
+      <div class="message-bubble">${data.message}</div>
+    `;
 
-  messagesList.appendChild(li);
-  scrollToBottom();
+    messagesList.appendChild(li);
+    messagesList.scrollTop = messagesList.scrollHeight;
+  });
 });
 
-// Focus name input on load
-window.addEventListener('DOMContentLoaded', () => {
-  usernameInput.focus();
-  
-  // Set initial disabled state
-  messageInput.disabled = true;
-  sendBtn.disabled = true;
-  emergencyBtn.disabled = true;
+// EMERGENCY
+socket.on("emergency alert", (data) => {
+  handleIncoming("emergency alert", data, (data) => {
+    const li = document.createElement("li");
+    li.className = "message emergency";
+
+    li.innerHTML = `
+      <div class="message-bubble">
+        🚨 EMERGENCY ALERT from ${data.name}
+      </div>
+    `;
+
+    messagesList.appendChild(li);
+  });
+});
+
+// STATUS
+socket.on("status update", (data) => {
+  handleIncoming("status update", data, (data) => {
+    const li = document.createElement("li");
+    li.className = "message";
+
+    li.innerHTML = `
+      <div class="message-bubble" style="background:${data.status==="SAFE"?"green":"red"};color:white;">
+        ${data.status==="SAFE"?"🟢":"🆘"} ${data.name} ${data.status}
+      </div>
+    `;
+
+    messagesList.appendChild(li);
+  });
+});
+
+// LOCATION
+socket.on("location update", (data) => {
+  handleIncoming("location update", data, (data) => {
+    const li = document.createElement("li");
+
+    const link = `https://www.google.com/maps?q=${data.lat},${data.lon}`;
+
+    li.innerHTML = `
+      📍 ${data.name} shared location  
+      <br>
+      <a href="${link}" target="_blank">View Map</a>
+    `;
+
+    messagesList.appendChild(li);
+  });
 });

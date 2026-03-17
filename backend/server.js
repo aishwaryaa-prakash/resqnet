@@ -14,23 +14,27 @@ app.get("/", (req, res) => {
 });
 
 io.on("connection", (socket) => {
-
-  console.log("A user connected");
+  console.log("User connected");
 
   socket.on("chat message", (data) => {
-    console.log("message:", data);
     io.emit("chat message", data);
   });
 
   socket.on("emergency alert", (data) => {
-    console.log("EMERGENCY:", data);
     io.emit("emergency alert", data);
+  });
+
+  socket.on("status update", (data) => {
+    io.emit("status update", data);
+  });
+
+  socket.on("location update", (data) => {
+    io.emit("location update", data);
   });
 
   socket.on("disconnect", () => {
     console.log("User disconnected");
   });
-
 });
 
 server.listen(3000, () => {
