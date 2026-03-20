@@ -13,14 +13,14 @@ const emptyState = document.getElementById("emptyState");
 let currentUser = "";
 let isRelay = false;
 
-// 🔐 Deduplication store
+// Deduplication store
 const processedMessages = new Set();
 
 function formatTime(date) {
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-// Enable buttons
+// Enable UI after name
 usernameInput.addEventListener("input", (e) => {
   currentUser = e.target.value.trim();
   const isValid = currentUser.length > 0;
@@ -35,25 +35,39 @@ usernameInput.addEventListener("input", (e) => {
   messageInput.placeholder = isValid ? "Type a message..." : "Enter your name first...";
 });
 
-// 🔁 Relay function (SAFE)
+// 🔁 ADVANCED RELAY FUNCTION
 function relayForward(event, data) {
-  if (isRelay && !data.relayed) {
-    socket.emit(event, {
-      ...data,
-      relayed: true
-    });
-  }
-}
 
-// 🧠 Universal receive handler (prevents duplicates)
-function handleIncoming(event, data, renderFn) {
+  // Deduplication
   if (processedMessages.has(data.id)) return;
-
   processedMessages.add(data.id);
 
   if (processedMessages.size > 2000) {
     processedMessages.clear();
   }
+
+  // Relay OFF → stop
+  if (!isRelay) return;
+
+  // Don't relay your own message
+  if (data.origin === currentUser) return;
+
+  // Stop if hop limit reached
+  if (data.hopCount >= data.maxHops) return;
+
+  // Forward message
+  socket.emit(event, {
+    ...data,
+    hopCount: data.hopCount + 1,
+    relayed: true
+  });
+}
+
+// 🧠 Unified receiver handler
+function handleIncoming(event, data, renderFn) {
+  if (processedMessages.has(data.id)) return;
+
+  processedMessages.add(data.id);
 
   relayForward(event, data);
 
@@ -70,6 +84,9 @@ function sendMessage() {
     id: crypto.randomUUID(),
     name: currentUser,
     message,
+    origin: currentUser,
+    hopCount: 0,
+    maxHops: 2,
     timestamp: new Date().toISOString()
   });
 
@@ -82,6 +99,9 @@ function sendEmergency() {
   socket.emit("emergency alert", {
     id: crypto.randomUUID(),
     name: currentUser,
+    origin: currentUser,
+    hopCount: 0,
+    maxHops: 2,
     timestamp: new Date().toISOString()
   });
 }
@@ -91,6 +111,9 @@ function setSafe() {
     id: crypto.randomUUID(),
     name: currentUser,
     status: "SAFE",
+    origin: currentUser,
+    hopCount: 0,
+    maxHops: 2,
     timestamp: new Date().toISOString()
   });
 }
@@ -100,11 +123,14 @@ function needHelp() {
     id: crypto.randomUUID(),
     name: currentUser,
     status: "HELP",
+    origin: currentUser,
+    hopCount: 0,
+    maxHops: 2,
     timestamp: new Date().toISOString()
   });
 }
 
-// 📍 LOCATION (fixed)
+// 📍 LOCATION
 function shareLocation() {
   if (!navigator.geolocation) {
     alert("Geolocation not supported");
@@ -118,6 +144,9 @@ function shareLocation() {
         name: currentUser,
         lat: pos.coords.latitude,
         lon: pos.coords.longitude,
+        origin: currentUser,
+        hopCount: 0,
+        maxHops: 2,
         timestamp: new Date().toISOString()
       });
     },
